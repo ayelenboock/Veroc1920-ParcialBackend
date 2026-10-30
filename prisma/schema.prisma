@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+
+// --------------------------------------------------------
+// ENUMS
+// --------------------------------------------------------
+
+enum ClienteCondicionIva {
+  Consumidor_Final @map("Consumidor Final")
+  Responsable_Inscripto @map("Responsable Inscripto")
+  Monotributo
+}
+
+enum PedidoEstado {
+  Pendiente
+  En_preparacion @map("En preparacion")
+  Despachado
+  Entregado
+  Cancelado
+}
+
+enum ProveedorCondicionIva {
+  Responsable_Inscripto @map("Responsable Inscripto")
+  Monotributo
+  Exento
+}
+
+// --------------------------------------------------------
+// MODELOS
+// --------------------------------------------------------
+
+model Categoria {
+  id_categoria   Int         @id @default(autoincrement())
+  nombre         String      @unique(map: "nombre") @db.VarChar(50)
+  descripcion    String?     @db.Text
+  creado_en      DateTime    @default(now()) @db.Timestamp(0)
+  actualizado_en DateTime    @default(now()) @updatedAt @db.Timestamp(0)
+  productos      Producto[]
+
+  @@map("categorias")
+}
+
+model Ciudad {
+  id_ciudad      Int             @id @default(autoincrement())
+  nombre         String          @db.VarChar(100)
+  codigo_postal  String          @db.VarChar(8)
+  provincia      String          @db.VarChar(50)
+  clientes       Cliente[]
+  compania_envio CompaniaEnvio[]
+  proveedores    Proveedor[]
+
+  @@unique([nombre, provincia], map: "ciudad_provincia_unica")
+  @@map("ciudades")
+}
+
+model Cliente {
+  id_cliente     Int                  @id @default(autoincrement())
+  nombre         String?              @db.VarChar(50)
+  apellido       String?              @db.VarChar(50)
+  cuit           String               @unique(map: "cuit") @db.VarChar(11)
+  razon_social   String?              @db.VarChar(150)
+  direccion      String               @db.VarChar(255)
+  id_ciudad      Int?
+  telefono       String?              @db.VarChar(20)
+  email          String?              @unique(map: "email") @db.VarChar(100)
+  dni            String?              @unique(map: "dni") @db.VarChar(10)
+  condicion_iva  ClienteCondicionIva @default(Consumidor_Final)
+  creado_en      DateTime             @default(now()) @db.Timestamp(0)
+  actualizado_en DateTime             @default(now()) @updatedAt @db.Timestamp(0)
+  ciudad         Ciudad?            @relation(fields: [id_ciudad], references: [id_ciudad], onDelete: SetNull, onUpdate: Cascade, map: "fk_clientes_ciudades")
+  pedidos        Pedido[]
+
+  @@index([id_ciudad], map: "fk_clientes_ciudades")
+  @@map("clientes")
+}
+
+model CompaniaEnvio {
+  id_compania    Int       @id @default(autoincrement())
+  nombre         String    @unique(map: "nombre") @db.VarChar(100)
+  telefono       String?   @db.VarChar(20)
+  direccion      String?   @db.VarChar(255)
+  id_ciudad      Int?
+  creado_en      DateTime  @default(now()) @db.Timestamp(0)
+  actualizado_en DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  ciudad         Ciudad? @relation(fields: [id_ciudad], references: [id_ciudad], onDelete: SetNull, onUpdate: Cascade, map: "fk_compania_envio_ciudades")
+  pedidos        Pedido[]
+
+  @@index([id_ciudad], map: "fk_compania_envio_ciudades")
+  @@map("compania_envio")
+}
+
+model DetallePedido {
+  id_pedido      Int
+  id_producto    Int
+  cantidad       Int
+  precio_unitario Decimal  @db.Decimal(10, 2)
+  creado_en      DateTime @default(now()) @db.Timestamp(0)
+  actualizado_en DateTime @default(now()) @updatedAt @db.Timestamp(0)
+  pedido         Pedido   @relation(fields: [id_pedido], references: [id_pedido], onDelete: Cascade, onUpdate: Cascade, map: "detalles_pedidos_ibfk_1")
+  producto       Producto @relation(fields: [id_producto], references: [id_producto], onDelete: Restrict, onUpdate: Cascade, map: "detalles_pedidos_ibfk_2")
+
+  @@id([id_pedido, id_producto])
+  @@index([id_pedido], map: "id_pedido")
+  @@index([id_producto], map: "id_producto")
+  @@map("detalles_pedidos")
+}
+
+model Empleado {
+  id_empleado      Int      @id @default(autoincrement())
+  nombre           String   @db.VarChar(50)
+  apellido         String   @db.VarChar(50)
+  fecha_de_nac     DateTime @db.Date
+  fecha_de_ingreso DateTime @db.Date
+  dni              String   @unique(map: "dni") @db.VarChar(10)
+  cuil             String   @unique(map: "cuil") @db.VarChar(11)
+  email            String?  @unique(map: "email") @db.VarChar(100)
+  puesto           String   @db.VarChar(50)
+  activo           Boolean @default(true)
+  creado_en        DateTime @default(now()) @db.Timestamp(0)
+  actualizado_en   DateTime @default(now()) @updatedAt @db.Timestamp(0)
+  pedidos          Pedido[]
+
+  @@map("empleados")
+}
+
+model Pedido {
+  id_pedido      Int               @id @default(autoincrement())
+  id_cliente     Int
+  id_empleado    Int
+  id_compania    Int
+  fecha          DateTime          @default(now()) @db.Timestamp(0)
+  total          Decimal           @default(0.00) @db.Decimal(10, 2)
+  estado         PedidoEstado     @default(Pendiente)
+  creado_en      DateTime          @default(now()) @db.Timestamp(0)
+  actualizado_en DateTime          @default(now()) @updatedAt @db.Timestamp(0)
+  cliente        Cliente          @relation(fields: [id_cliente], references: [id_cliente], onDelete: Restrict, onUpdate: Cascade, map: "pedidos_ibfk_1")
+  empleado       Empleado         @relation(fields: [id_empleado], references: [id_empleado], onDelete: Restrict, onUpdate: Cascade, map: "pedidos_ibfk_2")
+  compania_envio CompaniaEnvio     @relation(fields: [id_compania], references: [id_compania], onDelete: Restrict, onUpdate: Cascade, map: "pedidos_ibfk_3")
+  detalles       DetallePedido[]
+
+  @@index([id_cliente], map: "id_cliente")
+  @@index([id_empleado], map: "id_empleado")
+  @@index([id_compania], map: "id_compania")
+  @@map("pedidos")
+}
+
+model Producto {
+  id_producto     Int               @id @default(autoincrement())
+  id_proveedor    Int
+  id_categoria    Int
+  nombre_producto String            @db.VarChar(150)
+  descripcion     String?           @db.Text
+  precio          Decimal           @db.Decimal(10, 2)
+  stock           Int               @default(0)
+  creado_en       DateTime          @default(now()) @db.Timestamp(0)
+  actualizado_en  DateTime          @default(now()) @updatedAt @db.Timestamp(0)
+  categoria       Categoria         @relation(fields: [id_categoria], references: [id_categoria], onDelete: Restrict, onUpdate: Cascade, map: "productos_ibfk_2")
+  proveedor       Proveedor         @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: Restrict, onUpdate: Cascade, map: "productos_ibfk_1")
+  detalles        DetallePedido[]
+
+  @@index([id_proveedor], map: "id_proveedor")
+  @@index([id_categoria], map: "id_categoria")
+  @@map("productos")
+}
+
+model Proveedor {
+  id_proveedor    Int                     @id @default(autoincrement())
+  razon_social    String                  @unique(map: "razon_social") @db.VarChar(150)
+  nombre_contacto String?                 @db.VarChar(100)
+  telefono        String?                 @db.VarChar(20)
+  email           String?                 @unique(map: "email") @db.VarChar(100)
+  direccion       String?                 @db.VarChar(255)
+  id_ciudad       Int?
+  condicion_iva   ProveedorCondicionIva
+  creado_en       DateTime                @default(now()) @db.Timestamp(0)
+  actualizado_en  DateTime                @default(now()) @updatedAt @db.Timestamp(0)
+  ciudad          Ciudad?                 @relation(fields: [id_ciudad], references: [id_ciudad], onDelete: SetNull, onUpdate: Cascade, map: "fk_proveedores_ciudades")
+  productos       Producto[]
+
+  @@index([id_ciudad], map: "fk_proveedores_ciudades")
+  @@map("proveedores")
+}
