@@ -33,8 +33,7 @@ export const empleadoValidation: Schema = {
   },
   email: {
     trim: true,
-    isEmail: { errorMessage: 'Debe proporcionar un correo electrónico válido' },
-    normalizeEmail: true
+    isEmail: { errorMessage: 'Debe proporcionar un correo electrónico válido' }
   },
   puesto: {
     trim: true,

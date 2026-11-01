@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { matchedData } from 'express-validator';
+import type { Prisma } from '../generated/prisma/client.js';
 import EmpleadosModel from '../models/empleadosModels.js';
 class EmpleadosController {
     constructor (){}
@@ -64,7 +65,7 @@ class EmpleadosController {
   async ingresar(req: Request, res: Response, next: NextFunction) {
     try {
       // matchedData obtiene la información limpia. Las fechas ya son instancias de Date por 'toDate'
-      const data = matchedData(req);
+      const data = matchedData(req) as Prisma.EmpleadoUncheckedCreateInput;
 
       const nuevoEmpleado = await EmpleadosModel.crear(data);
 

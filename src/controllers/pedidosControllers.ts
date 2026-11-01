@@ -150,7 +150,7 @@ class PedidosController {
       next(err);
     }
   }
-   // DELETE (Se asume la lógica de cierre del método interrumpido)
+   // DELETE
     async eliminar(req:Request, res:Response, next: NextFunction) {
         try {
             const id = Number(req.params.id);

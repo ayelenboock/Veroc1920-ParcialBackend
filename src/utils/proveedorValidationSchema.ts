@@ -1,4 +1,5 @@
 import type { Schema } from 'express-validator';
+import { ProveedorCondicionIva } from '../generated/prisma/enums.js';
 
 //  ESQUEMA BASE (POST y PUT) - Todos los campos requeridos
 export const proveedorValidation: Schema = {
@@ -16,8 +17,7 @@ export const proveedorValidation: Schema = {
   },
   email: {
     trim: true,
-    isEmail: { errorMessage: 'Debe proporcionar un correo electrónico válido' },
-    normalizeEmail: true
+    isEmail: { errorMessage: 'Debe proporcionar un correo electrónico válido' }
   },
   direccion: {
     trim: true,
@@ -31,7 +31,7 @@ export const proveedorValidation: Schema = {
     trim: true,
     notEmpty: { errorMessage: 'La condición de IVA es obligatoria' },
     isIn: {
-      options: [['RESPONSABLE_INSCRIPTO', 'MONOTRIBUTISTA', 'EXENTO', 'CONSUMIDOR_FINAL']], // Ajusta según tu ProveedorCondicionIva enum
+      options: [Object.values(ProveedorCondicionIva)], 
       errorMessage: 'La condición de IVA provista no es válida o no está permitida'
     }
   }

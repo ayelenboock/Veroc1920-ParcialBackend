@@ -1,7 +1,7 @@
 import express from "express";
 import { checkSchema } from "express-validator";
 import pedidosControllers from "../controllers/pedidosControllers.js";
-import { pedidoValidation,patchPedidoValidation,agregarDetalleValidation } from "../utils/pedidoValidationSchema.js";
+import { pedidoValidation, putPedidoValidation, patchPedidoValidation, agregarDetalleValidation } from "../utils/pedidoValidationSchema.js";
 import { validarCampos } from "../utils/validarCampos.js";
 import validarId from "../middlewares/validarId.js";
 
@@ -23,7 +23,7 @@ router.get('/estadisticas', pedidosControllers.estadisticas)
 //Métodos con /:id 
 router.route('/:id')
  .all(validarId)
- .put(checkSchema(pedidoValidation),validarCampos,pedidosControllers.actualizar)  //Método  PUT
+ .put(checkSchema(putPedidoValidation),validarCampos,pedidosControllers.actualizar)  //Método  PUT
 
 //Método Get id
  .get(pedidosControllers.consultarDetalle)

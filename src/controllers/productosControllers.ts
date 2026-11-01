@@ -1,5 +1,6 @@
 import type { Request,  Response, NextFunction } from 'express';
 import { matchedData } from 'express-validator';
+import type { Prisma } from '../generated/prisma/client.js';
 import ProductosModel from '../models/productosModels.js';
 class ProductosController {
     constructor () { }
@@ -58,7 +59,7 @@ class ProductosController {
 // POST
   async ingresar(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = matchedData(req);
+      const data = matchedData(req) as Prisma.ProductoUncheckedCreateInput;
 
       // Si el stock no se envía en el body, express-validator lo excluirá, asignamos 0 por defecto
       const nuevoProducto = await ProductosModel.crear({

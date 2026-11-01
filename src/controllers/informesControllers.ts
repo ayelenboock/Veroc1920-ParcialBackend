@@ -9,7 +9,10 @@ class InformesController {
   async ventasPorCategoria(req: Request, res: Response, next: NextFunction) {
     try {
       // matchedData obtiene automáticamente los strings validados o los valores por defecto del esquema
-      const { desde, hasta } = matchedData(req, { locations: ['query'] });
+      const datos = matchedData(req, { locations: ['query'] });
+      //Si no vienen fechas en la URL, se toma todo el historial.
+      const desde: string = datos.desde ?? '2000-01-01'; //?? si no hay valor, se usa este.
+      const hasta: string = datos.hasta ?? '2100-01-01';
 
       // Consultamos el modelo pasándole las fechas limpias y formateadas
       const filas = await InformesModel.ventasPorCategoria(desde, hasta);

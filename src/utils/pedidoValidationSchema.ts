@@ -1,4 +1,5 @@
 import type { Schema } from 'express-validator';
+import { PedidoEstado } from '../generated/prisma/enums.js';
 
 //  ESQUEMA BASE uso en POST y PUT
 export const pedidoValidation: Schema = {
@@ -18,13 +19,12 @@ export const pedidoValidation: Schema = {
     optional: { options: { values: 'falsy' } },
     trim: true,
     isIn: {
-      options: [['PENDIENTE', 'PROCESANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO']], // Reemplaza por los de tu PedidoEstado enum
+      options: [Object.values(PedidoEstado)], 
       errorMessage: 'El estado provisto no es válido'
     }
   },
   // Validaciones del contenedor principal "detalles" (Solo requerida en POST)
   detalles: {
-    optional: { options: { values: 'falsy' } }, // Lo hacemos opcional en la base para que PUT no falle (ya que PUT no altera el detalle según tu controlador)
     isArray: { options: { min: 1 }, errorMessage: 'El pedido debe tener al menos un producto en "detalles"' },
     custom: {
       options: (value: any[]) => {
@@ -42,14 +42,17 @@ export const pedidoValidation: Schema = {
     isInt: { errorMessage: 'Cada detalle necesita un id_producto entero' },
     toInt: true
   },
-  'detalles.*.amount': {
-    //  Mapeado bajo la propiedad 'cantidad' 
-  },
+ 
   'detalles.*.cantidad': {
     isInt: { options: { min: 1 }, errorMessage: 'Cada detalle necesita una cantidad entera mayor a 0' },
     toInt: true
   }
 };
+
+//ESQUEMA PARA PUT: igual al base pero sin los detalles, ya que no se pueden modificar desde el PUT de la cabecera
+export const putPedidoValidation: Schema = Object.fromEntries(
+  Object.entries(pedidoValidation).filter(([key]) => !key.startsWith('detalles'))
+);
 
 //  ESQUEMA DINÁMICO PARA uso de PATCH
 export const patchPedidoValidation: Schema = Object.fromEntries(
@@ -57,9 +60,10 @@ export const patchPedidoValidation: Schema = Object.fromEntries(
     .filter(([key]) => !key.startsWith('detalles')) // Quitamos los campos de detalles en el PATCH de la cabecera
     .map(([key, value]) => [
       key,
-      { ...value, optional: true }
+      { ...value, optional: true } // en el PATCH todos los campos son opcionales
     ])
 );
+
 
 //  ESQUEMA PARA AGREGAR UN DETALLE SUELTO (POST /:id/detalles)
 export const agregarDetalleValidation: Schema = {

@@ -6,6 +6,6 @@ import { validarCampos } from "../utils/validarCampos.js";
 
 const router = express.Router();
 
-router.get('/ventas-categoria', checkSchema(informesValidation), validarCampos, informesControllers.ventasPorCategoria);
+router.get('/ventas', checkSchema(informesValidation), validarCampos, informesControllers.ventasPorCategoria);
 
 export default router;

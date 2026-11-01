@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { matchedData } from 'express-validator';
+import type { Prisma } from '../generated/prisma/client.js';
 import ClientesModel from '../models/clientesModels.js'
 import type { ClienteCondicionIva } from '../generated/prisma/enums.js';
 import { normalizarEnum } from '../utils/normalizarEnum.js';
@@ -76,7 +77,7 @@ async consultarPorCondicion(req: Request, res: Response, next: NextFunction) {
     async ingresar(req:Request,res:Response, next: NextFunction){
         try {
             // matchedData obtiene los campos limpios y validados del esquema
-            const data = matchedData(req); 
+            const data = matchedData(req) as Prisma.ClienteUncheckedCreateInput;
       
             // Creamos el registro a través del model pasándole directamente la data sanitizada
             const nuevoCliente = await ClientesModel.crear({

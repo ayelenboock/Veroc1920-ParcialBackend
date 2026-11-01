@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { matchedData } from 'express-validator';
+import type { Prisma } from '../generated/prisma/client.js';
 import ProveedoresModel from '../models/proveedoresModels.js'
 import type { ProveedorCondicionIva } from '../generated/prisma/enums.js';
 import { normalizarEnum } from '../utils/normalizarEnum.js';
@@ -68,7 +69,7 @@ class ProveedoresController {
  // POST
   async ingresar(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = matchedData(req);
+      const data = matchedData(req) as Prisma.ProveedorUncheckedCreateInput;
 
       const nuevoProveedor = await ProveedoresModel.crear({
         ...data,
